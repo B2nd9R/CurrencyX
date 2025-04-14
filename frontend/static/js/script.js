@@ -1,3 +1,4 @@
+// frontend/static/js/main.js
 document.addEventListener('DOMContentLoaded', () => {
     // عناصر DOM
     const themeToggle = document.getElementById('theme-toggle');
@@ -16,7 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const fromRateSpan = document.querySelector('.from-rate');
     const toRateSpan = document.querySelector('.to-rate');
 
-    // تحميل الثيم من localStorage
+    // إعداد رابط API (Render أو محلي)
+    const API_URL = window.location.hostname === 'localhost' 
+        ? 'http://localhost:8000' 
+        : 'https://currencyx-backend.onrender.com';
+
+    // تحميل الثيم
     const currentTheme = localStorage.getItem('theme') || 'light';
     body.classList.add(currentTheme + '-mode');
     updateThemeIcon(currentTheme);
@@ -68,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
             convertBtn.disabled = true;
             convertBtn.textContent = 'جاري التحويل...';
 
-            const response = await fetch('http://localhost:8000/api/convert', {
+            const response = await fetch(`${API_URL}/api/convert`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -81,7 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                throw new Error('فشل في تحويل العملة');
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'فشل في تحويل العملة');
             }
 
             const data = await response.json();

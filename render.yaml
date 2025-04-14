@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: currencyx-backend
+    runtime: python
+    python:
+      version: "3.9"
+    buildCommand: |
+      pip install -r requirements.txt
+    startCommand: |
+      gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: API_KEY
+        fromGroup: currencyx-env
+    healthCheckPath: /api/health
+
+  - type: web
+    name: currencyx-frontend
+    runtime: static
+    buildCommand: |
+      echo "No build needed for static site"
+    staticPublishPath: "./frontend"
+    envVars:
+      - key: API_BASE_URL
+        value: https://currencyx-backend.onrender.com
