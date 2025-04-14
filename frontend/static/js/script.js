@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // إعداد رابط API (Render أو محلي)
     const API_URL = window.location.hostname === 'localhost' 
-        ? 'http://localhost:8000' 
+        ? 'http://localhost:8000'
         : 'https://currencyx-backend.onrender.com';
 
     // تحميل الثيم

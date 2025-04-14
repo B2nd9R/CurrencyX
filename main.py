@@ -36,6 +36,17 @@ app.include_router(
     tags=["Currency Conversion"]
 )
 
+@app.get("/")
+async def root():
+    return {
+        "message": "مرحباً بكم في CurrencyX API",
+        "endpoints": {
+            "convert": "/api/convert",
+            "docs": "/docs",
+            "health": "/api/health"
+        }
+    }
+
 # نقطة فحص الصحة (مطلوبة لـ Render)
 @app.get("/api/health")
 async def health_check():
@@ -47,11 +58,10 @@ async def health_check():
 # التشغيل المحلي vs الإنتاج
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 8000))
+    port = int(os.environ.get("PORT", 8000))  # يستقبل المنفذ من متغير البيئة
     uvicorn.run(
         app,
         host="0.0.0.0",
         port=port,
-        reload=os.environ.get("DEV_MODE", "False") == "True",  # التحميل الحيوي في التطوير فقط
-        log_level="info"
+        reload=False  # مهم للإنتاج!
     )
