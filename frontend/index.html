@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CurrencyX - محول العملات</title>
+    <link rel="stylesheet" href="./static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="light-mode">
+    <div class="container">
+        <header>
+            <h1>CurrencyX</h1>
+            <button id="theme-toggle" aria-label="تبديل الثيم">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <main>
+            <div class="converter-card">
+                <div class="input-group">
+                    <label for="amount">المبلغ</label>
+                    <input type="number" id="amount" placeholder="أدخل المبلغ" value="100">
+                </div>
+
+                <div class="currency-selectors">
+                    <div class="select-group">
+                        <label for="from-currency">من</label>
+                        <select id="from-currency">
+                            <option value="SAR">ريال سعودي (SAR)</option>
+                            <option value="USD">دولار أمريكي (USD)</option>
+                            <option value="EUR">يورو (EUR)</option>
+                            <option value="OMR">ريال عماني (OMR)</option>
+                        </select>
+                    </div>
+
+                    <button id="swap-currencies" aria-label="تبديل العملات">
+                        <i class="fas fa-exchange-alt"></i>
+                    </button>
+
+                    <div class="select-group">
+                        <label for="to-currency">إلى</label>
+                        <select id="to-currency">
+                            <option value="USD">دولار أمريكي (USD)</option>
+                            <option value="SAR">ريال سعودي (SAR)</option>
+                            <option value="EUR">يورو (EUR)</option>
+                            <option value="OMR">ريال عماني (OMR)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="convert-btn">تحويل</button>
+
+                <div class="result-container hidden">
+                    <div class="result-value">
+                        <span id="original-amount">100</span>
+                        <span id="from-currency-text">SAR</span>
+                        =
+                        <span id="converted-amount">0.00</span>
+                        <span id="to-currency-text">USD</span>
+                    </div>
+                    <div class="rate-info">
+                        المعدل: 1 <span class="from-rate">SAR</span> = <span id="rate-value">0.00</span> <span class="to-rate">USD</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>تم التطوير بواسطة بندر</p>
+        </footer>
+    </div>
+
+    <script src="./static/js/script.js"></script>
+</body>
+</html>
