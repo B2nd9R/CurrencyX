@@ -1,68 +1,59 @@
-# python -m uvicorn main:app --reload
-
+import os
 from fastapi import FastAPI
 from backend.api.routes.currency import router as currency_router
-import logging
 from fastapi.middleware.cors import CORSMiddleware
-import os
+import logging
 
-# إعدادات التسجيل (Logging)
+# إعدادات التسجيل
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# تهيئة التطبيق
 app = FastAPI(
     title="CurrencyX API",
     description="واجهة برمجية لتحويل العملات",
-    # debug=False في الإنتاج! (يتم تعطيله تلقائياً عند استخدام gunicorn)
+    version="v0.3.0",
+    debug=False
 )
 
-# إعدادات CORS
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # في الإنتاج ضيق النطاق حسب الحاجة
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# تضمين الراوتر
-app.include_router(
-    currency_router,
-    prefix="/api",
-    tags=["Currency Conversion"]
-)
+# الرواتر
+app.include_router(currency_router, prefix="/api", tags=["Currency"])
 
 @app.get("/")
 @app.head("/")
 async def root():
-    return {
-        "message": "مرحباً بكم في CurrencyX API",
-        "endpoints": {
-            "convert": "/api/convert",
-            "docs": "/docs",
-            "health": "/api/health"
-        }
-    }
+    return {"status": "active", "service": "CurrencyX"}
 
-# نقطة فحص الصحة (مطلوبة لـ Render)
 @app.get("/api/health")
 async def health_check():
     return {
-        "status": "active",
-        "port": os.environ.get("PORT", "غير معين")
+        "status": "healthy",
+        "port": os.environ.get("PORT", "default"),
+        "version": app.version
     }
 
-# التشغيل المحلي vs الإنتاج
-if __name__ == "__main__":
+def run_server():
     import uvicorn
-    port = int(os.environ.get("PORT", 8000))  # يستقبل المنفذ من متغير البيئة
+    port = int(os.environ.get("PORT", 8000))
     uvicorn.run(
-        app,
+        "main:app",
         host="0.0.0.0",
         port=port,
-        reload=False  # مهم للإنتاج!
+        workers=4,
+        reload=False,
+        log_level="info"
     )
+
+if __name__ == "__main__":
+    run_server()
