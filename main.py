@@ -37,6 +37,7 @@ app.include_router(
 )
 
 @app.get("/")
+@app.head("/")
 async def root():
     return {
         "message": "مرحباً بكم في CurrencyX API",
