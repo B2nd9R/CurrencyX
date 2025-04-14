@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from backend.api.routes.currency import router as currency_router
 import logging
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 # إعدادات التسجيل (Logging)
 logging.basicConfig(
@@ -12,21 +13,20 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# تهيئة التطبيق مع تفعيل وضع التصحيح
+# تهيئة التطبيق
 app = FastAPI(
     title="CurrencyX API",
     description="واجهة برمجية لتحويل العملات",
-    debug=True
+    # debug=False في الإنتاج! (يتم تعطيله تلقائياً عند استخدام gunicorn)
 )
 
-# إعدادات CORS (السماح بطلبات من الفرونت إند)
+# إعدادات CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # في الإنتاج استبدل "*" بالنطاق الخاص بك (مثال: ["https://yourdomain.com"])
+    allow_origins=["*"],  # في الإنتاج ضيق النطاق حسب الحاجة
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],  # أضف OPTIONS هنا
+    allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Content-Disposition"]
 )
 
 # تضمين الراوتر
@@ -36,13 +36,22 @@ app.include_router(
     tags=["Currency Conversion"]
 )
 
-# تشغيل الخادم (للاستخدام المحلي فقط)
+# نقطة فحص الصحة (مطلوبة لـ Render)
+@app.get("/api/health")
+async def health_check():
+    return {
+        "status": "active",
+        "port": os.environ.get("PORT", "غير معين")
+    }
+
+# التشغيل المحلي vs الإنتاج
 if __name__ == "__main__":
     import uvicorn
+    port = int(os.environ.get("PORT", 8000))
     uvicorn.run(
-        "main:app",
+        app,
         host="0.0.0.0",
-        port=int(os.environ.get("PORT", 8000)),
-        reload=False,
-        log_level="debug"
+        port=port,
+        reload=os.environ.get("DEV_MODE", "False") == "True",  # التحميل الحيوي في التطوير فقط
+        log_level="info"
     )
