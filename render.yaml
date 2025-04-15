@@ -7,17 +7,12 @@ services:
     buildCommand: |
       pip install --upgrade pip && \
       pip install -r requirements.txt
-    startCommand: |
-      gunicorn main:app \
-        --bind 0.0.0.0:$PORT \
-        --workers 2 \
-        --worker-class uvicorn.workers.UvicornWorker \
-        --timeout 60 \
-        --log-level debug \
-        --preload
+    startCommand: python main.py
     envVars:
       - key: API_KEY
         fromGroup: currencyx-env
-    healthCheckPath: /api/health
+      - key: PORT
+        value: 10000
+    healthCheckPath: /health
     healthCheckTimeout: 120
     autoDeploy: yes
