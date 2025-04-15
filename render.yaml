@@ -15,8 +15,6 @@ services:
       --timeout 120 \
       --log-level info
     envVars:
-      - key: PORT
-        value: 10000
       - key: API_KEY
         fromGroup: currencyx-env
     healthCheckPath: /api/health
