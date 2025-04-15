@@ -7,16 +7,17 @@ services:
     buildCommand: |
       pip install --upgrade pip && \
       pip install -r requirements.txt
-    # تم تعديل أمر البدء لاستخدام قيمة PORT التي تحددها منصة Render تلقائياً
-    # وإزالة تعريف PORT اليدوي من متغيرات البيئة
     startCommand: |
-     PORT="${PORT:-10000}" gunicorn main:app \
-      --bind 0.0.0.0:$PORT \
-      --workers 4 \
-      --worker-class uvicorn.workers.UvicornWorker \
-      --timeout 120 \
-      --log-level info
+      gunicorn main:app \
+        --bind 0.0.0.0:$PORT \
+        --workers 2 \
+        --worker-class uvicorn.workers.UvicornWorker \
+        --timeout 60 \
+        --log-level debug \
+        --preload
     envVars:
       - key: API_KEY
         fromGroup: currencyx-env
     healthCheckPath: /api/health
+    healthCheckTimeout: 120
+    autoDeploy: yes
