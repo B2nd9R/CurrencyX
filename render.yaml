@@ -7,6 +7,8 @@ services:
     buildCommand: |
       pip install --upgrade pip && \
       pip install -r requirements.txt
+    # تم تعديل أمر البدء لاستخدام قيمة PORT التي تحددها منصة Render تلقائياً
+    # وإزالة تعريف PORT اليدوي من متغيرات البيئة
     startCommand: |
       gunicorn main:app \
       --bind 0.0.0.0:$PORT \
@@ -15,8 +17,6 @@ services:
       --timeout 120 \
       --log-level info
     envVars:
-      - key: PORT
-        value: 10000
       - key: API_KEY
         fromGroup: currencyx-env
     healthCheckPath: /api/health
