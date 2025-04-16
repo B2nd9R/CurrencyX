@@ -1,4 +1,6 @@
-fastapi==0.95.2      # إطار العمل الأساسي للـ API
-uvicorn==0.22.0      # خادم ASGI لتشغيل FastAPI
-python-dotenv==0.21.0 # لتحميل متغيرات البيئة (اختياري)
-requests==2.31.0     # للاتصال بـ APIs خارجية (إذا كنت تستخدمها)
+fastapi==0.95.2
+uvicorn==0.22.0
+gunicorn==20.1.0
+python-dotenv==0.21.0
+Jinja2==3.1.2
+requests==2.31.0

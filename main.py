@@ -1,10 +1,10 @@
-# python -m uvicorn main:app --reload
-
 import os
 import logging
-from fastapi import FastAPI
-import uvicorn
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from backend.api.routes.currency import router as currency_router
 
 # إعدادات التسجيل
@@ -14,11 +14,15 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="CurrencyX API",
     description="واجهة برمجية لتحويل العملات",
-    version="v0.3.3",
+    version="v0.3.4",
     docs_url="/docs",
     redoc_url=None,
     debug=False
 )
+
+# إعدادات الملفات الثابتة
+app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
+templates = Jinja2Templates(directory="frontend")
 
 # CORS
 app.add_middleware(
@@ -31,10 +35,9 @@ app.add_middleware(
 # تضمين الراوتر
 app.include_router(currency_router, prefix="/api", tags=["Currency"])
 
-@app.get("/")
-@app.head("/")
-async def root():
-    return {"status": "active", "service": "CurrencyX"}
+@app.get("/", response_class=HTMLResponse)
+async def serve_frontend(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/health")
 async def health_check():
@@ -52,16 +55,12 @@ async def startup_event():
     logger.info(f"تم بدء التشغيل على المنفذ: {port}")
     logger.info(f"إصدار التطبيق: {app.version}")
 
-def run_server():
+if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=port,
         workers=1,
-        log_level="info",
-        timeout_keep_alive=60
+        log_level="info"
     )
-
-if __name__ == "__main__":
-    run_server()
