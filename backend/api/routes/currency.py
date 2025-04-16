@@ -1,16 +1,15 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 import requests
-from dotenv import load_dotenv
+import os
 import logging
-import os  # هذه المكتبة ناقصة في ملفك الأصلي
-
-logger = logging.getLogger(__name__)
-
-# المسار الصحيح لملف .env يجب أن يكون نسبياً للموقع الحالي
-load_dotenv(os.path.join(os.path.dirname(__file__), '../../.env'))  # تصحيح المسار
+from dotenv import load_dotenv
 
 router = APIRouter()
+
+# تحميل المتغيرات من المسار الصحيح
+env_path = os.path.join(os.path.dirname(__file__), '..', '..', '.env')
+load_dotenv(env_path)
 
 class ConvertRequest(BaseModel):
     amount: float
@@ -18,49 +17,57 @@ class ConvertRequest(BaseModel):
     to_currency: str
 
 @router.post("/convert")
-async def convert_currency(data: ConvertRequest):
-    API_KEY = os.getenv("API_KEY")
-    logger.debug(f"Using API Key: {API_KEY[:4]}...")  # تسجيل جزء من المفتاح للأمان
+async def convert_currency(request: Request, data: ConvertRequest):
+    """Convert currency using external API"""
+    API_KEY = os.getenv("EXCHANGE_API_KEY")
     
     if not API_KEY:
-        logger.error("API_KEY is missing!")
-        raise HTTPException(status_code=500, detail="API key not configured")
+        logging.critical("Exchange API KEY is missing!")
+        raise HTTPException(
+            status_code=500,
+            detail="Service configuration error - API KEY missing"
+        )
 
-    url = f"https://v6.exchangerate-api.com/v6/{API_KEY}/pair/{data.from_currency}/{data.to_currency}"
-    logger.debug(f"Requesting URL: {url.split('/')[2]}...")
-
+    url = f"https://v6.exchangerate-api.com/v6/{API_KEY}/pair/{data.from_currency}/{data.to_currency}/{data.amount}"
+    
     try:
-        response = requests.get(url, timeout=10)  # أضف timeout لتجنب التجميد
-        logger.debug(f"API Response: {response.status_code}")
-        
-        if response.status_code != 200:
-            raise HTTPException(
-                status_code=response.status_code,
-                detail=f"API request failed with status {response.status_code}"
-            )
-            
-        result = response.json()
-        
-        if result.get("result") == "error":
-            error_detail = result.get("error-type", "Unknown error from exchange API")
-            raise HTTPException(status_code=400, detail=error_detail)
-            
-        converted_amount = data.amount * result["conversion_rate"]
-        return {
-            "original": data.amount,
-            "converted": round(converted_amount, 2),
-            "rate": result["conversion_rate"],
-            "currency": data.to_currency  # إضافة مفيدة للفرونت إند
+        # إضافة معلومات الرأس للتعريف
+        headers = {
+            "User-Agent": "CurrencyX/1.0",
+            "Accept": "application/json"
         }
         
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Request failed: {str(e)}")
-        raise HTTPException(
-            status_code=503,
-            detail="Service temporarily unavailable"
-        )
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()
+        result = response.json()
+
+        if result.get("result") != "success":
+            error_type = result.get("error-type", "unknown_error")
+            logging.error(f"API Error: {error_type}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Exchange API error: {error_type}"
+            )
+
+        return {
+            "status": "success",
+            "data": {
+                "original": data.amount,
+                "converted": result["conversion_result"],
+                "rate": result["conversion_rate"],
+                "from_currency": data.from_currency,
+                "to_currency": data.to_currency
+            }
+        }
+
+    except requests.Timeout:
+        logging.error("API request timeout")
+        raise HTTPException(status_code=504, detail="API request timeout")
+    except requests.RequestException as e:
+        logging.error(f"API connection error: {str(e)}")
+        raise HTTPException(status_code=502, detail=f"API connection error: {str(e)}")
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
+        logging.error(f"Unexpected error: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail="Internal server error"
